@@ -111,10 +111,9 @@
     </div>
 
     <script>
-        // API URL
-        const apiUrl = 'http://115.124.76.241:3356/cbt-x-play/api-config.php';
+       const apiUrl = 'https://cors-anywhere.herokuapp.com/http://115.124.76.241:3356/cbt-x-play/api-config.php';
 
-        // Element references
+        // Element references (sama seperti kode asli kamu)
         const loadingElement = document.getElementById('loading');
         const errorMessageElement = document.getElementById('error-message');
         const errorTextElement = document.getElementById('error-text');
@@ -214,13 +213,13 @@
             `;
         }
 
-        // Fetch API data
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
-                return response.json();
-            })
-            .then(data => {
+      // Fetch API data
+fetch(apiUrl)
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
+        return response.json();
+    })
+    .then(data => {
                 loadingElement.classList.add('hidden');
                 dataContainer.classList.remove('hidden');
 
@@ -268,12 +267,12 @@
                 });
 
                 totalItemsElement.textContent = data.length;
-            })
-            .catch(error => {
-                loadingElement.classList.add('hidden');
-                errorTextElement.textContent = 'Terjadi kesalahan saat mengambil data: ' + error.message;
-                errorMessageElement.classList.remove('hidden');
-            });
+           })
+    .catch(error => {
+        loadingElement.classList.add('hidden');
+        errorTextElement.textContent = 'Terjadi kesalahan saat mengambil data: ' + error.message;
+        errorMessageElement.classList.remove('hidden');
+    });
     </script>
 </body>
 </html>
