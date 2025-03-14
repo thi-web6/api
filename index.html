@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data API Config</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Data API Config</h1>
+                <p class="text-gray-500 text-sm">Manajemen konfigurasi API sistem</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full hidden md:inline-flex">
+                    <i class="fas fa-database mr-1"></i>Server Status: Online
+                </span>
+                <button id="navbarToggle" class="text-gray-600 focus:outline-none">
+                    <i class="fas fa-bars text-xl md:text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Dropdown Menu -->
+        <div id="navbarMenu" class="hidden bg-white shadow-lg rounded-b-lg absolute right-4 top-full w-48 md:w-56">
+            <ul class="py-2">
+                <li>
+                    <a href="#" id="backBtn" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i> Kembali
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="logoutBtn" class="block px-4 py-2 text-red-700 hover:bg-red-50 flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 pt-24 pb-8">
+        <!-- Loading State -->
+        <div id="loading" class="hidden flex flex-col items-center justify-center p-12">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
+            <p class="mt-4 text-lg text-gray-600 font-medium">Memuat data konfigurasi...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow" role="alert">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle fa-lg mr-3"></i>
+                <div id="error-text"></div>
+            </div>
+        </div>
+
+        <!-- Data Card -->
+        <div id="data-container" class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-700">Daftar Konfigurasi API</h2>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white" id="data-table">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs md:text-sm leading-normal">
+                            <th class="py-3 px-4 md:px-6 text-left">ID</th>
+                            <th class="py-3 px-4 md:px-6 text-left">Alias</th>
+                            <th class="py-3 px-4 md:px-6 text-left">Server Link</th>
+                            <th class="py-3 px-4 md:px-6 text-center">Max User</th>
+                            <th class="py-3 px-4 md:px-6 text-center">Status</th>
+                            <th class="py-3 px-4 md:px-6 text-center">Created At</th>
+                            <th class="py-3 px-4 md:px-6 text-center">Updated At</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm">
+                        <!-- Data akan dimuat di sini -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Responsive Cards -->
+            <div id="mobile-cards" class="md:hidden px-4 py-4">
+                <!-- Mobile cards will be generated here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden py-12 flex flex-col items-center justify-center">
+                <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="mt-4 text-gray-500">Tidak ada data konfigurasi yang tersedia.</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-500" id="data-summary">Menampilkan <span id="total-items">0</span> konfigurasi</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="mt-6 text-center text-gray-500 text-sm">
+            <p>© 2025 Data API Config System | Terakhir diperbarui: <span id="last-updated">-</span></p>
+        </div>
+    </div>
+
+    <script>
+        // API URL
+        const apiUrl = 'http://115.124.76.241:3356/cbt-x-play/api-config.php';
+
+        // Element references
+        const loadingElement = document.getElementById('loading');
+        const errorMessageElement = document.getElementById('error-message');
+        const errorTextElement = document.getElementById('error-text');
+        const tableBody = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+        const mobileCards = document.getElementById('mobile-cards');
+        const emptyState = document.getElementById('empty-state');
+        const totalItemsElement = document.getElementById('total-items');
+        const lastUpdatedElement = document.getElementById('last-updated');
+        const dataContainer = document.getElementById('data-container');
+        const navbarToggle = document.getElementById('navbarToggle');
+        const navbarMenu = document.getElementById('navbarMenu');
+        const backBtn = document.getElementById('backBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Toggle Navbar Menu
+        navbarToggle.addEventListener('click', () => {
+            navbarMenu.classList.toggle('hidden');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!navbarToggle.contains(e.target) && !navbarMenu.contains(e.target)) {
+                navbarMenu.classList.add('hidden');
+            }
+        });
+
+        // Placeholder actions for buttons
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.history.back();
+        });
+
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Apakah Anda yakin ingin keluar?')) {
+                window.location.href = '/logout'; // Ganti dengan URL logout yang sesuai
+            }
+        });
+
+        // Show loading
+        loadingElement.classList.remove('hidden');
+        dataContainer.classList.add('hidden');
+
+        // Format date function
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? dateString : new Intl.DateTimeFormat('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        // Create status badge
+        function createStatusBadge(status) {
+            const isActive = status === '1' || status.toLowerCase() === 'active' || status.toLowerCase() === 'aktif';
+            const badgeClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            const statusText = isActive ? 'Aktif' : 'Nonaktif';
+            return `<span class="${badgeClass} py-1 px-3 rounded-full text-xs font-medium">${statusText}</span>`;
+        }
+
+        // Create mobile card
+        function createMobileCard(item) {
+            const isActive = item.aktif === '1' || item.aktif.toLowerCase() === 'active' || item.aktif.toLowerCase() === 'aktif';
+            const statusClass = isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            const statusText = isActive ? 'Aktif' : 'Nonaktif';
+
+            return `
+                <div class="border rounded-lg overflow-hidden mb-4 shadow-sm transition-all hover:shadow-md">
+                    <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium text-base">${item.alias}</h3>
+                            <span class="text-xs text-gray-500">ID: ${item.id}</span>
+                        </div>
+                        <span class="${statusClass} py-1 px-3 rounded-full text-xs font-medium">${statusText}</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="mb-2">
+                            <span class="text-gray-500 text-xs">Server Link:</span>
+                            <div class="text-sm font-mono break-all">${item.server_link}</div>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <div>
+                                <span class="text-gray-500 text-xs">Max User:</span>
+                                <div class="text-sm">${item.max_user}</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-3 pt-3 border-t">
+                            <div>Dibuat: ${formatDate(item.create_at)}</div>
+                            <div>Diperbarui: ${formatDate(item.update_at)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fetch API data
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
+                return response.json();
+            })
+            .then(data => {
+                loadingElement.classList.add('hidden');
+                dataContainer.classList.remove('hidden');
+
+                if (!data || data.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    totalItemsElement.textContent = '0';
+                    return;
+                }
+
+                lastUpdatedElement.textContent = new Date().toLocaleString('id-ID');
+
+                data.forEach(item => {
+                    // Desktop table row
+                    const row = tableBody.insertRow();
+                    row.className = "border-b border-gray-200 hover:bg-gray-100 transition-colors";
+
+                    row.insertCell(0).className = "py-3 px-4 md:px-6 text-left";
+                    row.cells[0].textContent = item.id;
+
+                    row.insertCell(1).className = "py-3 px-4 md:px-6 text-left";
+                    row.cells[1].textContent = item.alias;
+
+                    const serverLinkCell = row.insertCell(2);
+                    serverLinkCell.className = "py-3 px-4 md:px-6 text-left";
+                    const serverLinkEl = document.createElement('div');
+                    serverLinkEl.className = "truncate max-w-[200px] md:max-w-xs";
+                    serverLinkEl.textContent = item.server_link;
+                    serverLinkEl.title = item.server_link;
+                    serverLinkCell.appendChild(serverLinkEl);
+
+                    row.insertCell(3).className = "py-3 px-4 md:px-6 text-center";
+                    row.cells[3].textContent = item.max_user;
+
+                    row.insertCell(4).className = "py-3 px-4 md:px-6 text-center";
+                    row.cells[4].innerHTML = createStatusBadge(item.aktif);
+
+                    row.insertCell(5).className = "py-3 px-4 md:px-6 text-center";
+                    row.cells[5].textContent = formatDate(item.create_at);
+
+                    row.insertCell(6).className = "py-3 px-4 md:px-6 text-center";
+                    row.cells[6].textContent = formatDate(item.update_at);
+
+                    // Mobile card
+                    mobileCards.innerHTML += createMobileCard(item);
+                });
+
+                totalItemsElement.textContent = data.length;
+            })
+            .catch(error => {
+                loadingElement.classList.add('hidden');
+                errorTextElement.textContent = 'Terjadi kesalahan saat mengambil data: ' + error.message;
+                errorMessageElement.classList.remove('hidden');
+            });
+    </script>
+</body>
+</html>
